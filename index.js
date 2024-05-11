@@ -33,6 +33,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
      const foodsCollection = client.db('GreenChilli').collection('foods')
+     const purchaseCollection = client.db('GreenChilli').collection('purchase')
 
     //  All foods data
     app.get('/foods', async(req,res) =>{
@@ -45,6 +46,13 @@ async function run() {
         const query = {_id: new ObjectId(id)}
         const result = await foodsCollection.findOne(query)
         res.send(result)
+    })
+
+    // Save purchases foods
+    app.post('/purchase', async(req,res) =>{
+      const purchaseData = req.body
+      const result = await purchaseCollection.insertOne(purchaseData)
+      res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
