@@ -63,7 +63,7 @@ async function run() {
     // get all foods posted by a user
     app.get('/foods/:email', async(req, res) =>{
       const email = req.params.email
-      const query = { "email" : email}
+      const query = { email}
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
@@ -80,6 +80,14 @@ async function run() {
         }
       }
       const result = await foodsCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+    })
+
+    // get all foods posted by a user
+    app.get('/orderFood/:email', async(req, res) =>{
+      const email = req.params.email
+      const query = { email}
+      const result = await purchaseCollection.find(query).toArray()
       res.send(result)
     })
 
