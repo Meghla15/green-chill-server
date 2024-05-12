@@ -86,14 +86,21 @@ async function run() {
     // get all foods posted by a user
     app.get('/orderFood/:email', async(req, res) =>{
       const email = req.params.email
-      const query = { email}
+      const query = { "email" : email}
       const result = await purchaseCollection.find(query).toArray()
       res.send(result)
     })
-
+    
+    // delete a food from database
+    app.delete('/food/:id', async(req,res) =>{
+      const id = req.params.id
+      const query= {_id: new ObjectId (id)}
+      const result = await foodsCollection.deleteOne(query)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
