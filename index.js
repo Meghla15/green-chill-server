@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require ('cors')
 const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 require('dotenv').config()
 const port = process.env.PORT || 5000
@@ -38,13 +39,29 @@ async function run() {
     //  JWT generate
     app.post('/jwt', async(req,res) =>{
       const user = req.body
-      console.log("user token",user)
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '365d',
       })
-      console.log(token)
-      res.send({token})
+      res.cookie('token', token,{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === "production"? "none" : "strict" ,
+        maxAge : 0,
+      })
+      .send({success : true})
     })
+
+      // Clear token on logout
+      app.get('/logout', (req, res) => {
+        res
+          .clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+            maxAge: 0,
+          })
+          .send({ success: true })
+      })
 
     //  All foods data
     app.get('/foods', async(req,res) =>{
@@ -111,6 +128,7 @@ async function run() {
       const result = await purchaseCollection.deleteOne(query)
       res.send(result)
     })
+  
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
