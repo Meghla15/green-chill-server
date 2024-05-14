@@ -11,6 +11,7 @@ const corsOptions = {
     origin: [
       'http://localhost:5173',
       'http://localhost:5174',
+      " darling-bonbon-9ab53a.netlify.app",
     ],
     credentials: true,
     optionSuccessStatus: 200,
