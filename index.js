@@ -1,9 +1,10 @@
-const express = require('express')
-const cors = require ('cors')
-const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
+const express = require('express');
 require('dotenv').config()
+const cors = require ('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const port = process.env.PORT || 5000
 const app = express()
 
@@ -17,8 +18,9 @@ const corsOptions = {
     optionSuccessStatus: 200,
 }
 
-app.use(cors(corsOptions))
-app.use(express.json())
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wcqculy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -32,30 +34,31 @@ const client = new MongoClient(uri, {
   }
 });
 
+
 async function run() {
   try {
      const foodsCollection = client.db('GreenChilli').collection('foods')
      const purchaseCollection = client.db('GreenChilli').collection('purchase')
 
     //  JWT generate
-    app.post('/jwt', async(req,res) =>{
-      const user = req.body
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '365d',
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      // console.log('user for token', user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+      res.cookie('token', token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'strict'
       })
-      res.cookie('token', token,{
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === "production"? "none" : "strict" ,
-        maxAge : 0,
-      })
-      .send({success : true})
-    })
+          .send({ success: true });
+  })
 
       // Clear token on logout
       app.get('/logout', (req, res) => {
-        res
-          .clearCookie('token', {
+        const user = req.body
+        console.log(user)
+        res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
@@ -66,7 +69,16 @@ async function run() {
 
     //  All foods data
     app.get('/foods', async(req,res) =>{
+      const filter = req.query;
+      console.log(filter);
+      // const query = {
+      //   food_name : {
+      //     $regex: filter.search,
+      //     $options: 'i'}
+      // }
+      //    console.log(query)
       const result = await foodsCollection.find().toArray()
+      // console.log(result)
       res.send(result)
     })
     // single food data
@@ -94,9 +106,19 @@ async function run() {
     app.get('/foods/:email', async(req, res) =>{
       const email = req.params.email
       const query = { email}
+      console.log('tok tok token', req.cookies.token)
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
+
+    // search
+    // app.get('/foods', async(req,res) =>{
+    //   const filter = req.query;
+    //   console.log(filter)
+    //   const query = {
+    //     food_name :{$regex : filter.search}
+    //   }
+    // })
 
     // update a food item
     app.put('/food/:id', async(req,res) =>{
