@@ -22,6 +22,23 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+const verifyJWT = async (req,res,next) =>
+  {
+   const token = req?.cookies?.token
+  if(!token){
+   return res.status(401).send({message: 'unauthorized access '})
+  }
+  jwt.verify(token, process.env.Token,(err,decode) =>{
+  if(err){
+   return res.status(401).send({message: 'unauthorized access'})
+  }
+  req.user = decode
+  next()
+  })
+  }
+  
+  
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wcqculy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -48,8 +65,8 @@ async function run() {
 
       res.cookie('token', token, {
           httpOnly: true,
-          secure: false,
-          sameSite: 'strict'
+          secure: process.env.NODE_ENV === 'production',
+          sameSite:  process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       })
           .send({ success: true });
   })
@@ -69,18 +86,31 @@ async function run() {
 
     //  All foods data
     app.get('/foods', async(req,res) =>{
-      const filter = req.query;
-      console.log(filter);
-      // const query = {
-      //   food_name : {
-      //     $regex: filter.search,
-      //     $options: 'i'}
+      // const search = req.query.search
+      // let query = {
+      //   food_name :{
+      //         $regex: search,
+      //         $options: 'i'}
       // }
+      // // const query = {
+      // //   food_name : {
+      // //     $regex: filter.search,
+      // //     $options: 'i'}
+      // // }
       //    console.log(query)
       const result = await foodsCollection.find().toArray()
-      // console.log(result)
       res.send(result)
     })
+
+    app.get('/search', async (req, res) => {
+      const search=req.query.search 
+      let query = {
+        food_name:{$regex:search,$options:'i'},
+      }
+      const result = await foodsCollection.find(query).toArray();
+      res.send(result);
+    })
+    
     // single food data
     app.get('/food/:id', async (req,res)=>{
         const id = req.params.id
@@ -111,14 +141,7 @@ async function run() {
       res.send(result)
     })
 
-    // search
-    // app.get('/foods', async(req,res) =>{
-    //   const filter = req.query;
-    //   console.log(filter)
-    //   const query = {
-    //     food_name :{$regex : filter.search}
-    //   }
-    // })
+   
 
     // update a food item
     app.put('/food/:id', async(req,res) =>{
