@@ -1,2 +1,6 @@
-To Clone the Repo and Run Locally:
-i. git clone <repo_url> ii. cd <repo_name> iii. npm install iv. Create a .env file and add necessary variables. v. npm start vi. Open http://localhost:3000 in your browser.
+Website Name - Green Chilli Website
+Live site link - https://bespoke-gecko-7a32f0.netlify.app 
+Description - This is a resturant base website. And here is this resturent backend.
+
+Best features -1. Add item 2.Update  3.Delete
+Project's Best Technologies: i.MongoDb ii.NodeJs
